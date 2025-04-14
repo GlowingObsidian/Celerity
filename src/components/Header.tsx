@@ -7,7 +7,9 @@ function Header() {
   return (
     <div className="flex border-b-2 p-2 bg-violet-500 justify-between items-center">
       <div className="flex gap-x-2 items-center">
-        <img src="/logo.png" className="w-16 h-16" />
+        <a href={location.pathname.startsWith("/event") ? "#" : "/"}>
+          <img src="/logo.png" className="w-16 h-16" />
+        </a>
         <p className="text-5xl font-light">Celerity</p>
       </div>
       <Button

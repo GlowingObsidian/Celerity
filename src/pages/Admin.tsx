@@ -33,6 +33,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { getSettingValue } from "@/lib/utils";
 
 type OperationStatus = "IDLE" | "PROCESSING" | "SUCCESS" | "ERROR";
 
@@ -48,12 +49,12 @@ const Admin = () => {
 
   return (
     <div className="container mx-auto">
-      <div className="flex justify-evenly m-5 p-5 gap-x-2 *:text-xl *:w-1/3 *:text-center *:p-1 *:rounded-none *:cursor-pointer">
+      <div className="flex justify-evenly p-5 gap-x-2 *:text-base *:text-center *:md:text-xl  *:p-1 *:rounded-none *:cursor-pointer">
         {screens.map((screen, index) => (
           <Button
             key={index}
             variant="ghost"
-            className={currentScreen === index ? "border-b-2" : ""}
+            className={`${currentScreen === index ? "border-b-2" : ""}`}
             onClick={() => setCurrentScreen(index)}
           >
             {screen.title}
@@ -217,7 +218,7 @@ const Dashboard = () => {
                   <div className="w-full space-y-2">
                     <Label>Default UPI Address</Label>
                     <Input
-                      defaultValue={settings[2]?.value || ""}
+                      defaultValue={getSettingValue(settings, "upi")}
                       placeholder="Enter default address for UPI Payments"
                       className="border-2-foreground"
                       onChange={(e) => setUpi(e.target.value)}

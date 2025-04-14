@@ -16,14 +16,16 @@ function App() {
             <Route
               path="/"
               element={
-                <div className="w-md border-2 rounded mx-auto my-5 p-5 space-y-6 *:max-w-sm *:mx-auto *:block *:text-center">
-                  <p className="text-3xl">Welcome to Celerity</p>
-                  <Button asChild>
-                    <a href="/admin"> Go To Admin</a>
-                  </Button>
-                  <Button asChild>
-                    <a href="/registration"> Go To Registration</a>
-                  </Button>
+                <div className="container mx-auto">
+                  <div className="max-w-md border-2 rounded m-5 p-5 space-y-6 *:max-w-sm *:mx-auto *:block *:text-center">
+                    <p className="text-3xl">Welcome to Celerity</p>
+                    <Button asChild>
+                      <a href="/admin"> Go To Admin</a>
+                    </Button>
+                    <Button asChild>
+                      <a href="/registration"> Go To Registration</a>
+                    </Button>
+                  </div>
                 </div>
               }
             />

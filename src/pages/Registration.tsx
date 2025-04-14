@@ -31,7 +31,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { z } from "zod"; // Import zod
-import { createTableBody } from "@/lib/utils";
+import { createTableBody, getSettingValue } from "@/lib/utils";
 
 // Define our registration schema with Zod
 const nameSchema = z.string().min(1, "Name is required");
@@ -252,329 +252,329 @@ function Registration() {
     }
   };
 
-  function getSettingValue(key: string) {
-    if (!settings) return undefined;
-    const setting = settings.find((s) => s.name === key);
-    return setting?.value;
-  }
-
   return (
-    <div className="container mx-auto border-2 rounded my-5 p-5 space-y-6">
-      <p className="text-2xl text-center">Register Participant</p>
-      <form
-        className="space-y-4"
-        onSubmit={(e) => {
-          e.preventDefault();
-        }}
-      >
-        <div className="space-y-2">
-          <Label>Name</Label>
-          <Input
-            required
-            placeholder="Participant name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          {nameError && <p className="text-sm text-destructive">{nameError}</p>}
-        </div>
-        <div className="space-y-2">
-          <Label>College Name</Label>
-          <Select
-            value={collegeName}
-            onValueChange={(value) => setCollegeName(value)}
-            required
-          >
-            <SelectTrigger className="w-full border-2 border-foreground">
-              <SelectValue placeholder="Choose college name" />
-            </SelectTrigger>
-            <SelectContent className="border-2 *:font-semibold">
-              <SelectItem value="FIEM">FIEM</SelectItem>
-              <SelectItem value="FIT">FIT</SelectItem>
-              <SelectItem value="Other">Other</SelectItem>
-            </SelectContent>
-          </Select>
-          {collegeNameError && (
-            <p className="text-sm text-destructive">{collegeNameError}</p>
-          )}
-          {collegeName === "Other" && (
-            <>
-              <Input
-                value={otherCollegeName}
-                name="other"
-                placeholder="Enter college name if chosen other"
-                onChange={(e) => setOtherCollegeName(e.target.value)}
-              />
-              {otherCollegeNameError && (
-                <p className="text-sm text-destructive">
-                  {otherCollegeNameError}
-                </p>
-              )}
-            </>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label>E-Mail</Label>
-          <Input
-            required
-            value={email}
-            placeholder="Participant email"
-            onChange={(e) => setEmail(e.target.value)}
-          />
-          {emailError && (
-            <p className="text-sm text-destructive">{emailError}</p>
-          )}
-        </div>
-        <div className="space-y-2">
-          <Label>Phone Number</Label>
-          <Input
-            required
-            value={phone}
-            placeholder="Participant phone number"
-            onChange={(e) => setPhone(e.target.value)}
-          />
-          {phoneError && (
-            <p className="text-sm text-destructive">{phoneError}</p>
-          )}
-        </div>
-      </form>
-      <div className="space-y-2">
-        <Label>Events</Label>
-        <div className="grid lg:grid-cols-5 md:grid-cols-3 grid-cols-2 gap-x-4 gap-y-4">
-          {events?.map((event, index) => (
-            <div
-              key={index}
-              className={`${selectedEvents.includes(index) && "bg-primary text-white"} relative aspect-square p-2 text-xl md:aspect-video cursor-pointer rounded-md border-2 border-foreground flex flex-col justify-center items-center`}
-              onClick={() => {
-                if (selectedEvents.includes(index)) {
-                  setSelectedEvents(
-                    selectedEvents.filter((idx) => idx !== index),
-                  );
-                  setTotal(total - events[index].fee);
-                } else {
-                  setSelectedEvents([...selectedEvents, index]);
-                  setTotal(total + events[index].fee);
-                }
-              }}
+    <div className="container mx-auto">
+      <div className="border-2 rounded m-5 p-5 space-y-6">
+        <p className="text-2xl text-center">Register Participant</p>
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+          }}
+        >
+          <div className="space-y-2">
+            <Label>Name</Label>
+            <Input
+              required
+              placeholder="Participant name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            {nameError && (
+              <p className="text-sm text-destructive">{nameError}</p>
+            )}
+          </div>
+          <div className="space-y-2">
+            <Label>College Name</Label>
+            <Select
+              value={collegeName}
+              onValueChange={(value) => setCollegeName(value)}
+              required
             >
-              {selectedEvents.includes(index) ? (
-                <CheckIcon className="absolute top-2 right-2 w-4 h-4" />
-              ) : (
-                <PlusIcon className="absolute top-2 right-2 w-4 h-4" />
-              )}
-              <p className="text-center">{event.name}</p>
-              <p>₹{event.fee}</p>
-            </div>
-          ))}
-        </div>
-        {eventsError && (
-          <p className="text-sm text-destructive">{eventsError}</p>
-        )}
-      </div>
-      <div className="space-y-2">
-        <Label>Payment Mode</Label>
-        <div className="py-2 flex justify-between gap-x-2 *:w-1/2 *:text-lg *:cursor-pointer">
-          <Button
-            variant={paymentMode === "CASH" ? "default" : "secondary"}
-            onClick={() => setPaymentMode("CASH")}
-          >
-            Cash
-          </Button>
-          <Button
-            variant={paymentMode === "UPI" ? "default" : "secondary"}
-            onClick={() => setPaymentMode("UPI")}
-          >
-            UPI
-          </Button>
-        </div>
-      </div>
-      {isFormValid && (
-        <>
-          <div className="md:max-w-3/5 mx-auto border-2 rounded p-2 space-y-4">
-            <div className="flex justify-between text-xl font-extrabold">
-              <p>Invoice</p>
-              <p>Celluloid 2025</p>
-            </div>
-            <div className="text-sm">
-              <p className="text-lg">{name}</p>
-              <p>{email}</p>
-              <p>{collegeName === "Other" ? otherCollegeName : collegeName}</p>
-              <p>{phone}</p>
-            </div>
-            {events && selectedEvents.length !== 0 && (
+              <SelectTrigger className="w-full border-2 border-foreground">
+                <SelectValue placeholder="Choose college name" />
+              </SelectTrigger>
+              <SelectContent className="border-2 *:font-semibold">
+                <SelectItem value="FIEM">FIEM</SelectItem>
+                <SelectItem value="FIT">FIT</SelectItem>
+                <SelectItem value="Other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+            {collegeNameError && (
+              <p className="text-sm text-destructive">{collegeNameError}</p>
+            )}
+            {collegeName === "Other" && (
               <>
-                <Table>
-                  <TableHeader className="bg-secondary">
-                    <TableRow>
-                      <TableHead>SL.</TableHead>
-                      <TableHead>Event Name</TableHead>
-                      <TableHead>Fee</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {selectedEvents.map((eventIdx, idx) => (
-                      <TableRow key={idx}>
-                        <TableCell>{idx + 1}</TableCell>
-                        <TableCell>{events[eventIdx].name}</TableCell>
-                        <TableCell>₹{events[eventIdx].fee}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <div className="mt-2 pt-2 text-xl flex justify-between border-t-2 border-dashed">
-                  <p>Total ({paymentMode})</p>
-                  <p className="font-bold">₹{total}</p>
-                </div>
+                <Input
+                  value={otherCollegeName}
+                  name="other"
+                  placeholder="Enter college name if chosen other"
+                  onChange={(e) => setOtherCollegeName(e.target.value)}
+                />
+                {otherCollegeNameError && (
+                  <p className="text-sm text-destructive">
+                    {otherCollegeNameError}
+                  </p>
+                )}
               </>
             )}
           </div>
-          <div className="w-full flex justify-center">
-            <Dialog
-              open={
-                registrationStage == "PAYMENT" ||
-                registrationStage === "EMAIL" ||
-                registrationStage === "COMPLETE"
-              }
-            >
-              {total > 0 && (
-                <DialogTrigger asChild>
-                  <Button
-                    className="text-lg cursor-pointer"
-                    onClick={() => setRegistrationStage("PAYMENT")}
-                  >
-                    Proceed to Payment
-                  </Button>
-                </DialogTrigger>
-              )}
-              <DialogContent className="border-2 lg:w-2/3">
-                <DialogHeader>
-                  <DialogTitle className="text-center">
-                    {registrationStage === "PAYMENT" &&
-                      "Waiting for Confirmation"}
-                    {registrationStage === "EMAIL" && ""}
-                    {registrationStage === "COMPLETE" &&
-                      "Registration Complete"}
-                  </DialogTitle>
-                  <DialogDescription />
-                </DialogHeader>
-                {registrationStage === "PAYMENT" && (
-                  <>
-                    <div className="flex flex-col gap-y-2 h-full justify-center items-center">
-                      {paymentMode === "CASH" && (
-                        <p className="border-2 rounded-md aspect-square max-w-2/3 text-4xl md:text-5xl font-extrabold flex items-center justify-center text-center p-2">
-                          Please pay ₹{total} in Cash
-                        </p>
-                      )}
-                      {paymentMode === "UPI" && (
-                        <>
-                          <p className="text-lg font-extrabold">
-                            Scan to pay ₹{total}
-                          </p>
-                          <QRCode
-                            value={`upi://pay?pa=${getSettingValue("upi")}&am=${total}&cu=INR&tn=Celluloid`}
-                            className="bg-white p-1 mb-4"
-                          />
-                        </>
-                      )}
-                    </div>
-                    <div className="flex gap-x-2 *:w-1/2 *:cursor-pointer">
-                      <Button
-                        disabled={isLoading}
-                        variant="destructive"
-                        className="w-1/2"
-                        onClick={() => setRegistrationStage("IDLE")}
-                      >
-                        Cancel
-                      </Button>
-                      <Button
-                        disabled={isLoading}
-                        onClick={() => void handlePaymentComplete()}
-                      >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="animate-spin" />
-                            Processing...
-                          </>
-                        ) : (
-                          "Mark As Complete"
-                        )}
-                      </Button>
-                    </div>
-                  </>
-                )}
-                {registrationStage === "EMAIL" && (
-                  <>
-                    <div className="md:aspect-video flex flex-col justify-center items-center gap-y-4">
-                      <CheckIcon className="w-16 h-16" />
-                      <p className="text-4xl font-extrabold flex items-center justify-center text-center">
-                        <span>Payment Completed</span>
-                      </p>
-                      <p className="text-center">
-                        Send bill to participant at {email}
-                      </p>
-                    </div>
-                    <div className="flex gap-x-2 *:w-1/2 *:cursor-pointer">
-                      <Button
-                        variant="secondary"
-                        onClick={() => setRegistrationStage("COMPLETE")}
-                        className="bg-yellow-500"
-                      >
-                        Skip
-                      </Button>
-                      <Button
-                        disabled={isLoading}
-                        onClick={() => void handleSendEmail()}
-                      >
-                        {isLoading ? (
-                          <>
-                            <Loader2 className="animate-spin" />
-                            Sending...
-                          </>
-                        ) : (
-                          "Send bill"
-                        )}
-                      </Button>
-                    </div>
-                  </>
-                )}
-                {registrationStage === "COMPLETE" && (
-                  <>
-                    <div className="md:aspect-video flex flex-col justify-center items-center gap-y-4">
-                      <CheckIcon className="w-16 h-16" />
-                      <p className="text-4xl font-extrabold flex items-center justify-center text-center">
-                        <span>Bill Sent to Participant</span>
-                      </p>
-                    </div>
-                    <Button
-                      onClick={() => {
-                        setName("");
-                        setCollegeName("");
-                        setOtherCollegeName("");
-                        setEmail("");
-                        setPhone("");
-                        setSelectedEvents([]);
-                        setTotal(0);
-                        setPaymentMode("CASH");
-                        setRegistrationStage("IDLE");
-                        // Clear all errors
-                        setNameError(null);
-                        setCollegeNameError(null);
-                        setOtherCollegeNameError(null);
-                        setEmailError(null);
-                        setPhoneError(null);
-                        setEventsError(null);
-                        setIsFormValid(false);
-                      }}
-                      className="cursor-pointer"
-                    >
-                      Proceed to next registration
-                    </Button>
-                  </>
-                )}
-              </DialogContent>
-            </Dialog>
+          <div className="space-y-2">
+            <Label>E-Mail</Label>
+            <Input
+              required
+              value={email}
+              placeholder="Participant email"
+              onChange={(e) => setEmail(e.target.value)}
+            />
+            {emailError && (
+              <p className="text-sm text-destructive">{emailError}</p>
+            )}
           </div>
-        </>
-      )}
+          <div className="space-y-2">
+            <Label>Phone Number</Label>
+            <Input
+              required
+              value={phone}
+              placeholder="Participant phone number"
+              onChange={(e) => setPhone(e.target.value)}
+            />
+            {phoneError && (
+              <p className="text-sm text-destructive">{phoneError}</p>
+            )}
+          </div>
+        </form>
+        <div className="space-y-2">
+          <Label>Events</Label>
+          <div className="grid lg:grid-cols-5 md:grid-cols-3 grid-cols-2 gap-x-4 gap-y-4">
+            {events?.map((event, index) => (
+              <div
+                key={index}
+                className={`${selectedEvents.includes(index) && "bg-primary text-white"} relative aspect-square p-2 text-xl md:aspect-video cursor-pointer rounded-md border-2 border-foreground flex flex-col justify-center items-center`}
+                onClick={() => {
+                  if (selectedEvents.includes(index)) {
+                    setSelectedEvents(
+                      selectedEvents.filter((idx) => idx !== index),
+                    );
+                    setTotal(total - events[index].fee);
+                  } else {
+                    setSelectedEvents([...selectedEvents, index]);
+                    setTotal(total + events[index].fee);
+                  }
+                }}
+              >
+                {selectedEvents.includes(index) ? (
+                  <CheckIcon className="absolute top-2 right-2 w-4 h-4" />
+                ) : (
+                  <PlusIcon className="absolute top-2 right-2 w-4 h-4" />
+                )}
+                <p className="text-center">{event.name}</p>
+                <p>₹{event.fee}</p>
+              </div>
+            ))}
+          </div>
+          {eventsError && (
+            <p className="text-sm text-destructive">{eventsError}</p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <Label>Payment Mode</Label>
+          <div className="py-2 flex justify-between gap-x-2 *:w-1/2 *:text-lg *:cursor-pointer">
+            <Button
+              variant={paymentMode === "CASH" ? "default" : "secondary"}
+              onClick={() => setPaymentMode("CASH")}
+            >
+              Cash
+            </Button>
+            <Button
+              variant={paymentMode === "UPI" ? "default" : "secondary"}
+              onClick={() => setPaymentMode("UPI")}
+            >
+              UPI
+            </Button>
+          </div>
+        </div>
+        {isFormValid && (
+          <>
+            <div className="md:max-w-3/5 mx-auto border-2 rounded p-2 space-y-4">
+              <div className="flex justify-between text-xl font-extrabold">
+                <p>Invoice</p>
+                <p>Celluloid 2025</p>
+              </div>
+              <div className="text-sm">
+                <p className="text-lg">{name}</p>
+                <p>{email}</p>
+                <p>
+                  {collegeName === "Other" ? otherCollegeName : collegeName}
+                </p>
+                <p>{phone}</p>
+              </div>
+              {events && selectedEvents.length !== 0 && (
+                <>
+                  <Table>
+                    <TableHeader className="bg-secondary">
+                      <TableRow>
+                        <TableHead>SL.</TableHead>
+                        <TableHead>Event Name</TableHead>
+                        <TableHead>Fee</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {selectedEvents.map((eventIdx, idx) => (
+                        <TableRow key={idx}>
+                          <TableCell>{idx + 1}</TableCell>
+                          <TableCell>{events[eventIdx].name}</TableCell>
+                          <TableCell>₹{events[eventIdx].fee}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                  <div className="mt-2 pt-2 text-xl flex justify-between border-t-2 border-dashed">
+                    <p>Total ({paymentMode})</p>
+                    <p className="font-bold">₹{total}</p>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="w-full flex justify-center">
+              <Dialog
+                open={
+                  registrationStage == "PAYMENT" ||
+                  registrationStage === "EMAIL" ||
+                  registrationStage === "COMPLETE"
+                }
+              >
+                {total > 0 && (
+                  <DialogTrigger asChild>
+                    <Button
+                      className="text-lg cursor-pointer"
+                      onClick={() => setRegistrationStage("PAYMENT")}
+                    >
+                      Proceed to Payment
+                    </Button>
+                  </DialogTrigger>
+                )}
+                <DialogContent className="border-2 lg:w-2/3">
+                  <DialogHeader>
+                    <DialogTitle className="text-center">
+                      {registrationStage === "PAYMENT" &&
+                        "Waiting for Confirmation"}
+                      {registrationStage === "EMAIL" && ""}
+                      {registrationStage === "COMPLETE" &&
+                        "Registration Complete"}
+                    </DialogTitle>
+                    <DialogDescription />
+                  </DialogHeader>
+                  {registrationStage === "PAYMENT" && (
+                    <>
+                      <div className="flex flex-col gap-y-2 h-full justify-center items-center">
+                        {paymentMode === "CASH" && (
+                          <p className="border-2 rounded-md aspect-square max-w-2/3 text-4xl md:text-5xl font-extrabold flex items-center justify-center text-center p-2">
+                            Please pay ₹{total} in Cash
+                          </p>
+                        )}
+                        {paymentMode === "UPI" && (
+                          <>
+                            <p className="text-lg font-extrabold">
+                              Scan to pay ₹{total}
+                            </p>
+                            <QRCode
+                              value={`upi://pay?pa=${getSettingValue(settings, "upi")}&am=${total}&cu=INR&tn=Celluloid`}
+                              className="bg-white p-1 mb-4"
+                            />
+                          </>
+                        )}
+                      </div>
+                      <div className="flex gap-x-2 *:w-1/2 *:cursor-pointer">
+                        <Button
+                          disabled={isLoading}
+                          variant="destructive"
+                          className="w-1/2"
+                          onClick={() => setRegistrationStage("IDLE")}
+                        >
+                          Cancel
+                        </Button>
+                        <Button
+                          disabled={isLoading}
+                          onClick={() => void handlePaymentComplete()}
+                        >
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="animate-spin" />
+                              Processing...
+                            </>
+                          ) : (
+                            "Mark As Complete"
+                          )}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                  {registrationStage === "EMAIL" && (
+                    <>
+                      <div className="md:aspect-video flex flex-col justify-center items-center gap-y-4">
+                        <CheckIcon className="w-16 h-16" />
+                        <p className="text-4xl font-extrabold flex items-center justify-center text-center">
+                          <span>Payment Completed</span>
+                        </p>
+                        <p className="text-center">
+                          Send bill to participant at {email}
+                        </p>
+                      </div>
+                      <div className="flex gap-x-2 *:w-1/2 *:cursor-pointer">
+                        <Button
+                          variant="secondary"
+                          onClick={() => setRegistrationStage("COMPLETE")}
+                          className="bg-yellow-500"
+                        >
+                          Skip
+                        </Button>
+                        <Button
+                          disabled={isLoading}
+                          onClick={() => void handleSendEmail()}
+                        >
+                          {isLoading ? (
+                            <>
+                              <Loader2 className="animate-spin" />
+                              Sending...
+                            </>
+                          ) : (
+                            "Send bill"
+                          )}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                  {registrationStage === "COMPLETE" && (
+                    <>
+                      <div className="md:aspect-video flex flex-col justify-center items-center gap-y-4">
+                        <CheckIcon className="w-16 h-16" />
+                        <p className="text-4xl font-extrabold flex items-center justify-center text-center">
+                          <span>Bill Sent to Participant</span>
+                        </p>
+                      </div>
+                      <Button
+                        onClick={() => {
+                          setName("");
+                          setCollegeName("");
+                          setOtherCollegeName("");
+                          setEmail("");
+                          setPhone("");
+                          setSelectedEvents([]);
+                          setTotal(0);
+                          setPaymentMode("CASH");
+                          setRegistrationStage("IDLE");
+                          // Clear all errors
+                          setNameError(null);
+                          setCollegeNameError(null);
+                          setOtherCollegeNameError(null);
+                          setEmailError(null);
+                          setPhoneError(null);
+                          setEventsError(null);
+                          setIsFormValid(false);
+                        }}
+                        className="cursor-pointer"
+                      >
+                        Proceed to next registration
+                      </Button>
+                    </>
+                  )}
+                </DialogContent>
+              </Dialog>
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }
