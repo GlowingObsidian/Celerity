@@ -12,7 +12,7 @@ export const sendMail = action({
     phone: v.string(),
     events: v.string(),
   },
-  handler: async (ctx, args) => {
+  handler: async (_, args) => {
     const response = await fetch(
       "https://api.emailjs.com/api/v1.0/email/send",
       {
