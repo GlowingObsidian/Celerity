@@ -17,7 +17,7 @@ function App() {
               path="/"
               element={
                 <div className="container mx-auto">
-                  <div className="max-w-md border-2 rounded m-5 p-5 space-y-6 *:max-w-sm *:mx-auto *:block *:text-center">
+                  <div className="max-w-md border-2 rounded mx-auto my-5 p-5 space-y-6 *:max-w-sm *:mx-auto *:block *:text-center">
                     <p className="text-3xl">Welcome to Celerity</p>
                     <Button asChild>
                       <a href="/admin"> Go To Admin</a>
