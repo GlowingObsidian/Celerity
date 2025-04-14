@@ -252,6 +252,12 @@ function Registration() {
     }
   };
 
+  function getSettingValue(key: string) {
+    if (!settings) return undefined;
+    const setting = settings.find((s) => s.name === key);
+    return setting?.value;
+  }
+
   return (
     <div className="container mx-auto border-2 rounded my-5 p-5 space-y-6">
       <p className="text-2xl text-center">Register Participant</p>
@@ -464,7 +470,7 @@ function Registration() {
                             Scan to pay ₹{total}
                           </p>
                           <QRCode
-                            value={`upi://pay?pa=${settings && settings[2].value}&am=${total}&cu=INR&tn=Celluloid`}
+                            value={`upi://pay?pa=${getSettingValue("upi")}&am=${total}&cu=INR&tn=Celluloid`}
                             className="bg-white p-1 mb-4"
                           />
                         </>
