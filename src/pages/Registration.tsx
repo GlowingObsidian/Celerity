@@ -59,11 +59,17 @@ function Registration() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedEvents, setSelectedEvents] = useState<number[]>([]);
+  const [selectedFlashEvents, setSelectedFlashEvents] = useState<number[]>([]);
   const [paymentMode, setPaymentMode] = useState<"CASH" | "UPI">("CASH");
+
   const [registrationStage, setRegistrationStage] = useState<
     "IDLE" | "PAYMENT" | "EMAIL" | "COMPLETE"
   >("IDLE");
   const [total, setTotal] = useState(0);
+  const [discount, setDiscount] = useState<{
+    name: string;
+    value: number;
+  } | null>(null);
   const [registration, setRegistration] = useState<Doc<"registration">>();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -142,18 +148,29 @@ function Registration() {
 
   useEffect(() => {
     try {
-      eventsSchema.parse(selectedEvents);
+      eventsSchema.parse([...selectedEvents, ...selectedFlashEvents]);
       setEventsError(null);
     } catch (error) {
       if (error instanceof z.ZodError) {
         setEventsError(error.errors[0].message);
       }
     }
-  }, [selectedEvents]);
+    if (selectedFlashEvents.length >= 3) {
+      switch (selectedFlashEvents.length) {
+        case 3:
+          setDiscount({ name: "COMBO3", value: 10 });
+          break;
+        case 4:
+          setDiscount({ name: "COMBO4", value: 20 });
+          break;
+        case 5:
+          setDiscount({ name: "COMBO5", value: 30 });
+          break;
+      }
+    } else setDiscount(null);
+  }, [selectedEvents, selectedFlashEvents]);
 
-  // Check overall form validity
   useEffect(() => {
-    // Check if all required fields are valid
     const isValid =
       !nameError &&
       name.trim() !== "" &&
@@ -168,8 +185,7 @@ function Registration() {
       !phoneError &&
       phone !== "" &&
       !eventsError &&
-      selectedEvents.length > 0;
-
+      (selectedEvents.length > 0 || selectedFlashEvents.length > 0);
     setIsFormValid(isValid);
   }, [
     nameError,
@@ -184,15 +200,18 @@ function Registration() {
     phone,
     eventsError,
     selectedEvents,
+    selectedFlashEvents,
   ]);
 
   const handlePaymentComplete = async () => {
     if (!events || !isFormValid) return null;
 
-    const finalEvents = selectedEvents.map((index) => {
-      const event = events[index];
-      return event._id;
-    });
+    const finalEvents = [...selectedEvents, ...selectedFlashEvents].map(
+      (index) => {
+        const event = events[index];
+        return event._id;
+      },
+    );
 
     setIsLoading(true);
     try {
@@ -202,7 +221,7 @@ function Registration() {
         email,
         phone,
         events: finalEvents,
-        amount: total,
+        amount: total - (discount?.value || 0),
         mode: paymentMode,
       });
 
@@ -219,14 +238,16 @@ function Registration() {
 
   const handleSendEmail = async () => {
     if (!events) return null;
-    const finalEvents = selectedEvents.map((index) => {
-      const event = events[index];
-      return {
-        name: event.name,
-        fee: event.fee,
-        room: event.room,
-      };
-    });
+    const finalEvents = [...selectedEvents, ...selectedFlashEvents].map(
+      (index) => {
+        const event = events[index];
+        return {
+          name: event.name,
+          fee: event.fee,
+          room: event.room,
+        };
+      },
+    );
     const eventsTableBody = createTableBody(finalEvents);
     const params = {
       first_name: name.split(" ")[0],
@@ -235,7 +256,7 @@ function Registration() {
         .toLocaleString("en-IN")
         .toUpperCase(),
       college: collegeName === "Other" ? otherCollegeName : collegeName,
-      total,
+      total: total - (discount?.value || 0),
       email,
       phone,
       events: eventsTableBody,
@@ -334,34 +355,75 @@ function Registration() {
             )}
           </div>
         </form>
-        <div className="space-y-2">
-          <Label>Events</Label>
-          <div className="grid lg:grid-cols-5 md:grid-cols-3 grid-cols-2 gap-x-4 gap-y-4">
-            {events?.map((event, index) => (
-              <div
-                key={index}
-                className={`${selectedEvents.includes(index) && "bg-primary text-white"} relative aspect-square p-2 text-xl md:aspect-video cursor-pointer rounded-md border-2 border-foreground flex flex-col justify-center items-center`}
-                onClick={() => {
-                  if (selectedEvents.includes(index)) {
-                    setSelectedEvents(
-                      selectedEvents.filter((idx) => idx !== index),
-                    );
-                    setTotal(total - events[index].fee);
-                  } else {
-                    setSelectedEvents([...selectedEvents, index]);
-                    setTotal(total + events[index].fee);
-                  }
-                }}
-              >
-                {selectedEvents.includes(index) ? (
-                  <CheckIcon className="absolute top-2 right-2 w-4 h-4" />
-                ) : (
-                  <PlusIcon className="absolute top-2 right-2 w-4 h-4" />
-                )}
-                <p className="text-center">{event.name}</p>
-                <p>₹{event.fee}</p>
-              </div>
-            ))}
+        <div className="space-y-6">
+          <div className="space-y-2">
+            <Label>Events</Label>
+            <div className="grid lg:grid-cols-5 md:grid-cols-3 grid-cols-2 gap-x-4 gap-y-4">
+              {events?.map(
+                (event, index) =>
+                  event.type === "EVENT" && (
+                    <div
+                      key={index}
+                      className={`${selectedEvents.includes(index) && "bg-primary text-white"} relative aspect-square p-2 text-xl md:aspect-video cursor-pointer rounded-md border-2 border-foreground flex flex-col justify-center items-center`}
+                      onClick={() => {
+                        if (selectedEvents.includes(index)) {
+                          setSelectedEvents(
+                            selectedEvents.filter((idx) => idx !== index),
+                          );
+                          setTotal(total - events[index].fee);
+                        } else {
+                          setSelectedEvents([...selectedEvents, index]);
+                          setTotal(total + events[index].fee);
+                        }
+                      }}
+                    >
+                      {selectedEvents.includes(index) ? (
+                        <CheckIcon className="absolute top-2 right-2 w-4 h-4" />
+                      ) : (
+                        <PlusIcon className="absolute top-2 right-2 w-4 h-4" />
+                      )}
+                      <p className="text-center">{event.name}</p>
+                      <p>₹{event.fee}</p>
+                    </div>
+                  ),
+              )}
+            </div>
+          </div>
+          <div className="space-y-2">
+            <Label>Flash Events</Label>
+            <div className="grid lg:grid-cols-5 md:grid-cols-3 grid-cols-2 gap-x-4 gap-y-4">
+              {events?.map(
+                (event, index) =>
+                  event.type === "FLASH" && (
+                    <div
+                      key={index}
+                      className={`${selectedFlashEvents.includes(index) && "bg-primary text-white"} relative aspect-square p-2 text-xl md:aspect-video cursor-pointer rounded-md border-2 border-foreground flex flex-col justify-center items-center`}
+                      onClick={() => {
+                        if (selectedFlashEvents.includes(index)) {
+                          setSelectedFlashEvents(
+                            selectedFlashEvents.filter((idx) => idx !== index),
+                          );
+                          setTotal(total - events[index].fee);
+                        } else {
+                          setSelectedFlashEvents([
+                            ...selectedFlashEvents,
+                            index,
+                          ]);
+                          setTotal(total + events[index].fee);
+                        }
+                      }}
+                    >
+                      {selectedFlashEvents.includes(index) ? (
+                        <CheckIcon className="absolute top-2 right-2 w-4 h-4" />
+                      ) : (
+                        <PlusIcon className="absolute top-2 right-2 w-4 h-4" />
+                      )}
+                      <p className="text-center">{event.name}</p>
+                      <p>₹{event.fee}</p>
+                    </div>
+                  ),
+              )}
+            </div>
           </div>
           {eventsError && (
             <p className="text-sm text-destructive">{eventsError}</p>
@@ -369,7 +431,7 @@ function Registration() {
         </div>
         <div className="space-y-2">
           <Label>Payment Mode</Label>
-          <div className="py-2 flex justify-between gap-x-2 *:w-1/2 *:text-lg *:cursor-pointer">
+          <div className="flex justify-between gap-x-2 *:w-1/2 *:text-lg *:cursor-pointer">
             <Button
               variant={paymentMode === "CASH" ? "default" : "secondary"}
               onClick={() => setPaymentMode("CASH")}
@@ -385,12 +447,9 @@ function Registration() {
           </div>
         </div>
         {isFormValid && (
-          <>
+          <div className="space-y-2">
+            <p className="text-center">Invoice</p>
             <div className="md:max-w-3/5 mx-auto border-2 rounded p-2 space-y-4">
-              <div className="flex justify-between text-xl font-extrabold">
-                <p>Invoice</p>
-                <p>Celluloid 2025</p>
-              </div>
               <div className="text-sm">
                 <p className="text-lg">{name}</p>
                 <p>{email}</p>
@@ -399,32 +458,50 @@ function Registration() {
                 </p>
                 <p>{phone}</p>
               </div>
-              {events && selectedEvents.length !== 0 && (
-                <>
-                  <Table>
-                    <TableHeader className="bg-secondary">
-                      <TableRow>
-                        <TableHead>SL.</TableHead>
-                        <TableHead>Event Name</TableHead>
-                        <TableHead>Fee</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {selectedEvents.map((eventIdx, idx) => (
-                        <TableRow key={idx}>
-                          <TableCell>{idx + 1}</TableCell>
-                          <TableCell>{events[eventIdx].name}</TableCell>
-                          <TableCell>₹{events[eventIdx].fee}</TableCell>
+              {events &&
+                (selectedEvents.length !== 0 ||
+                  selectedFlashEvents.length !== 0) && (
+                  <>
+                    <Table>
+                      <TableHeader className="bg-secondary">
+                        <TableRow>
+                          <TableHead>SL.</TableHead>
+                          <TableHead>Event Name</TableHead>
+                          <TableHead>Fee</TableHead>
                         </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                  <div className="mt-2 pt-2 text-xl flex justify-between border-t-2 border-dashed">
-                    <p>Total ({paymentMode})</p>
-                    <p className="font-bold">₹{total}</p>
-                  </div>
-                </>
-              )}
+                      </TableHeader>
+                      <TableBody>
+                        {[...selectedEvents, ...selectedFlashEvents]
+                          .sort()
+                          .map((eventIdx, idx) => (
+                            <TableRow key={idx}>
+                              <TableCell>{idx + 1}</TableCell>
+                              <TableCell>{events[eventIdx].name}</TableCell>
+                              <TableCell>₹{events[eventIdx].fee}</TableCell>
+                            </TableRow>
+                          ))}
+                      </TableBody>
+                    </Table>
+                    <div className="mt-2 pt-2 border-t-2 border-dashed">
+                      <div className="flex justify-between">
+                        <p>Sub Total</p>
+                        <p className="font-bold">₹{total}</p>
+                      </div>
+                      <div className="flex justify-between">
+                        <p>Discount {discount ? `(${discount.name})` : ""}</p>
+                        <p className="font-bold">
+                          {discount ? `-₹${discount.value}` : "₹0"}
+                        </p>
+                      </div>
+                      <div className="mt-3 text-3xl flex justify-between">
+                        <p>Total ({paymentMode})</p>
+                        <p className="font-bold">
+                          ₹{total - (discount?.value || 0)}
+                        </p>
+                      </div>
+                    </div>
+                  </>
+                )}
             </div>
             <div className="w-full flex justify-center">
               <Dialog
@@ -460,16 +537,17 @@ function Registration() {
                       <div className="flex flex-col gap-y-2 h-full justify-center items-center">
                         {paymentMode === "CASH" && (
                           <p className="border-2 rounded-md aspect-square max-w-2/3 text-4xl md:text-5xl font-extrabold flex items-center justify-center text-center p-2">
-                            Please pay ₹{total} in Cash
+                            Please pay ₹{total - (discount?.value || 0)} in Cash
                           </p>
                         )}
                         {paymentMode === "UPI" && (
                           <>
                             <p className="text-lg font-extrabold">
-                              Scan to pay ₹{total}
+                              Scan to pay ₹{total - (discount?.value || 0)} via
+                              UPI
                             </p>
                             <QRCode
-                              value={`upi://pay?pa=${getSettingValue(settings, "upi")}&am=${total}&cu=INR&tn=Celluloid`}
+                              value={`upi://pay?pa=${getSettingValue(settings, "upi")}&am=${total - (discount?.value || 0)}&cu=INR&tn=Celluloid`}
                               className="bg-white p-1 mb-4"
                             />
                           </>
@@ -551,7 +629,9 @@ function Registration() {
                           setEmail("");
                           setPhone("");
                           setSelectedEvents([]);
+                          setSelectedFlashEvents([]);
                           setTotal(0);
+                          setDiscount(null);
                           setPaymentMode("CASH");
                           setRegistrationStage("IDLE");
                           // Clear all errors
@@ -572,7 +652,7 @@ function Registration() {
                 </DialogContent>
               </Dialog>
             </div>
-          </>
+          </div>
         )}
       </div>
     </div>

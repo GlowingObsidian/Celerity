@@ -29,6 +29,7 @@ export default defineSchema({
     room: v.string(),
     registrations: v.array(v.id("registration")),
     link: v.string(),
+    type: v.union(v.literal("EVENT"), v.literal("FLASH")),
   })
     .index("by_name", ["name"])
     .index("by_link", ["link"]),

@@ -34,6 +34,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { getSettingValue } from "@/lib/utils";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type OperationStatus = "IDLE" | "PROCESSING" | "SUCCESS" | "ERROR";
 
@@ -301,10 +308,12 @@ const EventsTable = ({ events }: { events: Doc<"event">[] | undefined }) => {
         <TableRow>
           <TableHead className="hidden md:table-cell">SL.</TableHead>
           <TableHead>Name</TableHead>
-          <TableHead>Managed By</TableHead>
+          <TableHead className="hidden md:table-cell">Managed By</TableHead>
+          <TableHead className="md:hidden">Mngd.</TableHead>
           <TableHead>Fee</TableHead>
+          <TableHead>Type</TableHead>
           <TableHead className="hidden md:table-cell">Registrations</TableHead>
-          <TableHead className="md:hidden">Regs.</TableHead>
+          <TableHead className="md:hidden">Cnt.</TableHead>
           <TableHead>Link</TableHead>
         </TableRow>
       </TableHeader>
@@ -315,6 +324,7 @@ const EventsTable = ({ events }: { events: Doc<"event">[] | undefined }) => {
             <TableCell>{event.name}</TableCell>
             <TableCell>{event.cc}</TableCell>
             <TableCell>₹{event.fee}</TableCell>
+            <TableCell>{event.type.charAt(0)}</TableCell>
             <TableCell>{event.registrations.length}</TableCell>
             <TableCell>
               <a
@@ -322,7 +332,7 @@ const EventsTable = ({ events }: { events: Doc<"event">[] | undefined }) => {
                 target="_blank"
                 className="text-primary"
               >
-                Visit
+                Go
               </a>
             </TableCell>
           </TableRow>
@@ -348,6 +358,9 @@ const eventSchema = z.object({
       .min(1, "Fee must be greater than 0"),
   ),
   room: z.string().nonempty("Room is required"),
+  type: z.enum(["EVENT", "FLASH"], {
+    errorMap: () => ({ message: "Type is required" }),
+  }),
 });
 
 type EventFormData = {
@@ -355,6 +368,7 @@ type EventFormData = {
   cc: string;
   fee: string;
   room: string;
+  type: "EVENT" | "FLASH" | "";
 };
 
 type ValidatedEventData = z.infer<typeof eventSchema>;
@@ -368,7 +382,7 @@ interface EventFormProps {
 }
 
 const EventForm = ({
-  initialData = { name: "", cc: "", fee: "", room: "" },
+  initialData = { name: "", cc: "", fee: "", room: "", type: "" },
   onSubmit,
   submitLabel,
   isSubmitting,
@@ -394,6 +408,7 @@ const EventForm = ({
         const field = err.path[0] as keyof EventFormData;
         fieldErrors[field] = err.message;
       });
+      console.log(fieldErrors);
       setErrors(fieldErrors);
     } else {
       await onSubmit(parsed.data);
@@ -448,6 +463,30 @@ const EventForm = ({
         />
         {errors.room && (
           <p className="text-sm text-destructive">{errors.room}</p>
+        )}
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="type">Type</Label>
+        <Select
+          name="type"
+          defaultValue={formData.type}
+          onValueChange={(value) =>
+            setFormData({ ...formData, type: value as "EVENT" | "FLASH" })
+          }
+        >
+          <SelectTrigger className="w-full border-2 border-foreground">
+            <SelectValue placeholder="Type" />
+          </SelectTrigger>
+          <SelectContent
+            id="type"
+            className="w-full border-2 border-foreground font-bold"
+          >
+            <SelectItem value="EVENT">Event</SelectItem>
+            <SelectItem value="FLASH">Flash</SelectItem>
+          </SelectContent>
+        </Select>
+        {errors.type && (
+          <p className="text-sm text-destructive">{errors.type}</p>
         )}
       </div>
       <div className="flex gap-x-6 items-center">
@@ -569,6 +608,7 @@ const AllEvents = ({ events }: { events: Doc<"event">[] }) => {
                 cc: selectedEvent.cc,
                 fee: selectedEvent.fee.toString(),
                 room: selectedEvent.room,
+                type: selectedEvent.type,
               }}
               onSubmit={handleUpdate}
               submitLabel="Update Event"

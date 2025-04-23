@@ -10,6 +10,7 @@ export const createEvent = mutation({
     room: v.string(),
     registrations: v.array(v.id("registration")),
     link: v.string(),
+    type: v.union(v.literal("EVENT"), v.literal("FLASH")),
   },
   handler: async (ctx, args) => {
     const newEvent = await ctx.db.insert("event", args);
