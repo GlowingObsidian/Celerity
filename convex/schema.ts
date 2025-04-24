@@ -33,4 +33,16 @@ export default defineSchema({
   })
     .index("by_name", ["name"])
     .index("by_link", ["link"]),
+
+  serviceRecord: defineTable({
+    name: v.string(),
+    services: v.array(
+      v.object({
+        service: v.union(v.literal("tattoo"), v.literal("nail")),
+        count: v.number(),
+        price: v.number(),
+      }),
+    ),
+    total: v.number(),
+  }),
 });

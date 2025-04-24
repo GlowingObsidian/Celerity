@@ -479,7 +479,7 @@ const EventForm = ({
           </SelectTrigger>
           <SelectContent
             id="type"
-            className="w-full border-2 border-foreground font-bold"
+            className="w-full border-2 border-foreground font-semibold"
           >
             <SelectItem value="EVENT">Event</SelectItem>
             <SelectItem value="FLASH">Flash</SelectItem>

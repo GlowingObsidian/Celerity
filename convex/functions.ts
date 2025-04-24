@@ -12,42 +12,42 @@ export const createEvent = mutation({
     link: v.string(),
     type: v.union(v.literal("EVENT"), v.literal("FLASH")),
   },
-  handler: async (ctx, args) => {
-    const newEvent = await ctx.db.insert("event", args);
-    return newEvent;
-  },
+  handler: async (ctx, args) => await ctx.db.insert("event", args),
 });
 
 export const getEvents = query({
-  handler: async (ctx) => {
-    return await ctx.db
-      .query("event")
-      .withIndex("by_name")
-      .order("asc")
-      .collect();
+  handler: async (ctx) =>
+    await ctx.db.query("event").withIndex("by_name").order("asc").collect(),
+});
+
+export const updateEvent = mutation({
+  args: {
+    id: v.id("event"),
+    name: v.string(),
+    cc: v.string(),
+    fee: v.number(),
+    room: v.string(),
+    type: v.union(v.literal("EVENT"), v.literal("FLASH")),
   },
+  handler: async (ctx, args) => await ctx.db.patch(args.id, args),
 });
 
 export const getEventByLink = query({
   args: {
     link: v.string(),
   },
-  handler: async (ctx, args) => {
-    const event = await ctx.db
+  handler: async (ctx, args) =>
+    await ctx.db
       .query("event")
       .withIndex("by_link", (q) => q.eq("link", args.link))
-      .first();
-    return event;
-  },
+      .first(),
 });
 
 export const deleteEvent = mutation({
   args: {
     id: v.id("event"),
   },
-  handler: async (ctx, args) => {
-    await ctx.db.delete(args.id);
-  },
+  handler: async (ctx, args) => await ctx.db.delete(args.id),
 });
 
 export const totalMoneyCollected = query({
@@ -75,11 +75,11 @@ export const updateSettings = mutation({
       .query("setting")
       .withIndex("by_name", (q) => q.eq("name", args.name))
       .first();
-    if (setting) await ctx.db.patch(setting._id, { value: args.value });
+    if (setting) return await ctx.db.patch(setting._id, { value: args.value });
   },
 });
 
-export const createNewRegistration = mutation({
+export const createRegistration = mutation({
   args: {
     name: v.string(),
     college: v.string(),
@@ -91,15 +91,17 @@ export const createNewRegistration = mutation({
   },
   handler: async (ctx, args) => {
     const newRegistration = await ctx.db.insert("registration", { ...args });
+    const events = (
+      await Promise.all(args.events.map((eventId) => ctx.db.get(eventId)))
+    ).filter(Boolean) as Doc<"event">[];
 
-    for (const eventId of args.events) {
-      const event = await ctx.db.get(eventId);
-      if (event) {
-        await ctx.db.patch(eventId, {
-          registrations: [...(event.registrations ?? []), newRegistration],
-        });
-      }
-    }
+    await Promise.all(
+      events.map((event) =>
+        ctx.db.patch(event._id, {
+          registrations: [...event.registrations, newRegistration],
+        }),
+      ),
+    );
 
     return await ctx.db.get(newRegistration);
   },
@@ -110,11 +112,11 @@ export const getRegistrations = query({
     registrations: v.array(v.id("registration")),
   },
   handler: async (ctx, args) => {
-    const registrations: Doc<"registration">[] = [];
-    for (const registrationId of args.registrations) {
-      const registration = await ctx.db.get(registrationId);
-      if (registration) registrations.push(registration);
-    }
+    const registrations = (
+      await Promise.all(
+        args.registrations.map((registrationId) => ctx.db.get(registrationId)),
+      )
+    ).filter(Boolean) as Doc<"registration">[];
     return registrations.sort((a, b) => b._creationTime - a._creationTime);
   },
 });
@@ -134,17 +136,38 @@ export const deleteRegistration = mutation({
     const registration = await ctx.db.get(args.id);
     if (!registration) return null;
 
-    for (const eventId of registration.events) {
-      const event = await ctx.db.get(eventId);
-      if (event) {
-        const updatedRegistrations = (event.registrations ?? []).filter(
-          (id) => id !== args.id,
-        );
-        await ctx.db.patch(eventId, { registrations: updatedRegistrations });
-      }
-    }
+    const events = (
+      await Promise.all(
+        registration.events.map((eventId) => ctx.db.get(eventId)),
+      )
+    ).filter(Boolean) as Doc<"event">[];
+
+    await Promise.all(
+      events.map((event) =>
+        ctx.db.patch(event._id, {
+          registrations: event.registrations.filter(
+            (id) => id !== registration._id,
+          ),
+        }),
+      ),
+    );
 
     await ctx.db.delete(args.id);
     return true;
   },
+});
+
+export const createServiceRecord = mutation({
+  args: {
+    name: v.string(),
+    services: v.array(
+      v.object({
+        service: v.union(v.literal("tattoo"), v.literal("nail")),
+        count: v.number(),
+        price: v.number(),
+      }),
+    ),
+    total: v.number(),
+  },
+  handler: async (ctx, args) => await ctx.db.insert("serviceRecord", args),
 });

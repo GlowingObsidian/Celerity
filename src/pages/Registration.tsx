@@ -30,10 +30,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { z } from "zod"; // Import zod
+import { z } from "zod";
 import { createTableBody, getSettingValue } from "@/lib/utils";
 
-// Define our registration schema with Zod
 const nameSchema = z.string().min(1, "Name is required");
 const collegeNameSchema = z.string().min(1, "College name is required");
 const otherCollegeNameSchema = z
@@ -47,9 +46,7 @@ const eventsSchema = z.array(z.number()).min(1, "Select at least one event");
 
 function Registration() {
   const events = useQuery(api.functions.getEvents);
-  const createNewRegistration = useMutation(
-    api.functions.createNewRegistration,
-  );
+  const createRegistration = useMutation(api.functions.createRegistration);
   const settings = useQuery(api.functions.getSettings);
   const sendMail = useAction(api.actions.sendMail);
 
@@ -73,7 +70,6 @@ function Registration() {
   const [registration, setRegistration] = useState<Doc<"registration">>();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Error states for each field
   const [nameError, setNameError] = useState<string | null>(null);
   const [collegeNameError, setCollegeNameError] = useState<string | null>(null);
   const [otherCollegeNameError, setOtherCollegeNameError] = useState<
@@ -83,18 +79,14 @@ function Registration() {
   const [phoneError, setPhoneError] = useState<string | null>(null);
   const [eventsError, setEventsError] = useState<string | null>(null);
 
-  // Form validity state
   const [isFormValid, setIsFormValid] = useState(false);
 
-  // Validate individual fields
   useEffect(() => {
     try {
       nameSchema.parse(name);
       setNameError(null);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        setNameError(error.errors[0].message);
-      }
+      if (error instanceof z.ZodError) setNameError(error.errors[0].message);
     }
   }, [name]);
 
@@ -103,9 +95,8 @@ function Registration() {
       collegeNameSchema.parse(collegeName);
       setCollegeNameError(null);
     } catch (error) {
-      if (error instanceof z.ZodError) {
+      if (error instanceof z.ZodError)
         setCollegeNameError(error.errors[0].message);
-      }
     }
   }, [collegeName]);
 
@@ -115,13 +106,10 @@ function Registration() {
         otherCollegeNameSchema.parse(otherCollegeName);
         setOtherCollegeNameError(null);
       } catch (error) {
-        if (error instanceof z.ZodError) {
+        if (error instanceof z.ZodError)
           setOtherCollegeNameError(error.errors[0].message);
-        }
       }
-    } else {
-      setOtherCollegeNameError(null);
-    }
+    } else setOtherCollegeNameError(null);
   }, [otherCollegeName, collegeName]);
 
   useEffect(() => {
@@ -129,9 +117,7 @@ function Registration() {
       emailSchema.parse(email);
       setEmailError(null);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        setEmailError(error.errors[0].message);
-      }
+      if (error instanceof z.ZodError) setEmailError(error.errors[0].message);
     }
   }, [email]);
 
@@ -140,9 +126,7 @@ function Registration() {
       phoneSchema.parse(phone);
       setPhoneError(null);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        setPhoneError(error.errors[0].message);
-      }
+      if (error instanceof z.ZodError) setPhoneError(error.errors[0].message);
     }
   }, [phone]);
 
@@ -151,9 +135,7 @@ function Registration() {
       eventsSchema.parse([...selectedEvents, ...selectedFlashEvents]);
       setEventsError(null);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        setEventsError(error.errors[0].message);
-      }
+      if (error instanceof z.ZodError) setEventsError(error.errors[0].message);
     }
     if (selectedFlashEvents.length >= 3) {
       switch (selectedFlashEvents.length) {
@@ -215,7 +197,7 @@ function Registration() {
 
     setIsLoading(true);
     try {
-      const result = await createNewRegistration({
+      const result = await createRegistration({
         name,
         college: collegeName === "Other" ? otherCollegeName : collegeName,
         email,
@@ -286,7 +268,6 @@ function Registration() {
           <div className="space-y-2">
             <Label>Name</Label>
             <Input
-              required
               placeholder="Participant name"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -300,12 +281,11 @@ function Registration() {
             <Select
               value={collegeName}
               onValueChange={(value) => setCollegeName(value)}
-              required
             >
               <SelectTrigger className="w-full border-2 border-foreground">
                 <SelectValue placeholder="Choose college name" />
               </SelectTrigger>
-              <SelectContent className="border-2 *:font-semibold">
+              <SelectContent className="border-2 font-semibold">
                 <SelectItem value="FIEM">FIEM</SelectItem>
                 <SelectItem value="FIT">FIT</SelectItem>
                 <SelectItem value="Other">Other</SelectItem>
@@ -333,7 +313,6 @@ function Registration() {
           <div className="space-y-2">
             <Label>E-Mail</Label>
             <Input
-              required
               value={email}
               placeholder="Participant email"
               onChange={(e) => setEmail(e.target.value)}
@@ -345,7 +324,6 @@ function Registration() {
           <div className="space-y-2">
             <Label>Phone Number</Label>
             <Input
-              required
               value={phone}
               placeholder="Participant phone number"
               onChange={(e) => setPhone(e.target.value)}

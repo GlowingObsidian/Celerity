@@ -5,6 +5,7 @@ import { ThemeProvider } from "./components/theme-provider";
 import Header from "./components/Header";
 import { Button } from "./components/ui/button";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Service from "./pages/Service";
 
 function App() {
   return (
@@ -25,16 +26,19 @@ function App() {
                     <Button asChild>
                       <a href="/registration"> Go To Registration</a>
                     </Button>
+                    <Button asChild>
+                      <a href="/service"> Go To Services</a>
+                    </Button>
                   </div>
                 </div>
               }
             />
             <Route path="/admin" element={<Admin />} />
             <Route path="/registration" element={<Registration />} />
+            <Route path="/service" element={<Service />} />
             <Route path="/event/:name" element={<Event />} />
           </Routes>
         </Router>
-        <div className="text-background">Dummy</div>
       </div>
     </ThemeProvider>
   );
