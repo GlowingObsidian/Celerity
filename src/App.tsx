@@ -51,7 +51,14 @@ function App() {
                   </Authenticate>
                 }
               />
-              <Route path="/service" element={<Service />} />
+              <Route
+                path="/service"
+                element={
+                  <Authenticate name="servicesKey">
+                    <Service />
+                  </Authenticate>
+                }
+              />
               <Route path="/event/:name" element={<Event />} />
             </Routes>
           </Router>

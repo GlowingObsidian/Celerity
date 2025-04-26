@@ -41,6 +41,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type OperationStatus = "IDLE" | "PROCESSING" | "SUCCESS" | "ERROR";
 
@@ -56,18 +57,20 @@ const Admin = () => {
 
   return (
     <div className="container mx-auto">
-      <div className="flex justify-evenly p-5 gap-x-2 *:text-base *:text-center *:md:text-xl  *:p-1 *:rounded-none *:cursor-pointer">
-        {screens.map((screen, index) => (
-          <Button
-            key={index}
-            variant="ghost"
-            className={`${currentScreen === index ? "border-b-2" : ""}`}
-            onClick={() => setCurrentScreen(index)}
-          >
-            {screen.title}
-          </Button>
-        ))}
-      </div>
+      <Tabs defaultValue={screens[0].title} className="p-5">
+        <TabsList className="w-full p-1">
+          {screens.map((screen) => (
+            <TabsTrigger
+              key={screen.title}
+              value={screen.title}
+              className="font-semibold"
+              onClick={() => setCurrentScreen(screens.indexOf(screen))}
+            >
+              {screen.title}
+            </TabsTrigger>
+          ))}
+        </TabsList>
+      </Tabs>
       <div className="px-5">{screens[currentScreen].component}</div>
     </div>
   );
