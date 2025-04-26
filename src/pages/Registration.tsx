@@ -407,25 +407,25 @@ function Registration() {
             <p className="text-sm text-destructive">{eventsError}</p>
           )}
         </div>
-        <div className="space-y-2">
-          <Label>Payment Mode</Label>
-          <div className="flex justify-between gap-x-2 *:w-1/2 *:text-lg *:cursor-pointer">
-            <Button
-              variant={paymentMode === "CASH" ? "default" : "secondary"}
-              onClick={() => setPaymentMode("CASH")}
-            >
-              Cash
-            </Button>
-            <Button
-              variant={paymentMode === "UPI" ? "default" : "secondary"}
-              onClick={() => setPaymentMode("UPI")}
-            >
-              UPI
-            </Button>
-          </div>
-        </div>
         {isFormValid && (
           <div className="space-y-2">
+            <div className="space-y-2">
+              <Label>Payment Mode</Label>
+              <div className="flex justify-between gap-x-2 *:w-1/2 *:text-lg *:cursor-pointer">
+                <Button
+                  variant={paymentMode === "CASH" ? "default" : "secondary"}
+                  onClick={() => setPaymentMode("CASH")}
+                >
+                  Cash
+                </Button>
+                <Button
+                  variant={paymentMode === "UPI" ? "default" : "secondary"}
+                  onClick={() => setPaymentMode("UPI")}
+                >
+                  UPI
+                </Button>
+              </div>
+            </div>
             <p className="text-center">Invoice</p>
             <div className="md:max-w-3/5 mx-auto border-2 rounded p-2 space-y-4">
               <div className="text-sm">
