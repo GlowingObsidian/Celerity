@@ -38,11 +38,16 @@ export default defineSchema({
     name: v.string(),
     services: v.array(
       v.object({
-        service: v.union(v.literal("tattoo"), v.literal("nail")),
+        service: v.union(
+          v.literal("tattoo"),
+          v.literal("nail"),
+          v.literal("caricature"),
+        ),
         count: v.number(),
         price: v.number(),
       }),
     ),
+    mode: v.union(v.literal("CASH"), v.literal("UPI")),
     total: v.number(),
   }),
 });

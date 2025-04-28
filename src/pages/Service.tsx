@@ -31,12 +31,17 @@ import QRCode from "react-qr-code";
 import { z } from "zod";
 import { getSettingValue } from "@/lib/utils";
 import { CheckIcon, Loader } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { get } from "http";
 
 const nameSchema = z.string().min(1, "Name is required");
 const serviceSchema = z
   .array(
     z.object({
-      service: z.literal("tattoo").or(z.literal("nail")),
+      service: z
+        .literal("tattoo")
+        .or(z.literal("nail"))
+        .or(z.literal("caricature")),
       count: z.number(),
     }),
   )
@@ -49,11 +54,16 @@ const Service = () => {
   const [name, setName] = useState<string>("");
   const [tattoo, setTattoo] = useState<number>(0);
   const [nail, setNail] = useState<number>(0);
+  const [caricature, setCaricature] = useState<number>(0);
+  const [isCaricatureCouple, setIsCaricatureCouple] = useState(false);
 
   const [isFormValid, setIsFormValid] = useState(false);
 
+  const [paymentMode, setPaymentMode] = useState<"CASH" | "UPI">("CASH");
+
   const [nameError, setNameError] = useState<string | null>(null);
   const [servicesError, setServicesError] = useState<string | null>(null);
+  const [caricatureError, setCaricatureError] = useState<string | null>(null);
 
   const [paymentState, setPaymentState] = useState<"pending" | "completed">(
     "pending",
@@ -77,6 +87,7 @@ const Service = () => {
       const services = [
         tattoo > 0 && { service: "tattoo", count: tattoo },
         nail > 0 && { service: "nail", count: nail },
+        caricature > 0 && { service: "caricature", count: caricature },
       ].filter(Boolean);
       serviceSchema.parse(services);
       setServicesError(null);
@@ -85,12 +96,15 @@ const Service = () => {
         setServicesError(error.errors[0].message);
       }
     }
-  }, [tattoo, nail]);
+  }, [tattoo, nail, caricature]);
 
   useEffect(() => {
     const isValid = !nameError && !servicesError;
     setIsFormValid(isValid);
   }, [nameError, servicesError]);
+
+  const getTotalPrice = () =>
+    tattoo * 30 + nail * 30 + caricature * (isCaricatureCouple ? 100 : 80);
 
   const handlePayment = async () => {
     if (!isFormValid) return;
@@ -98,21 +112,27 @@ const Service = () => {
     try {
       const services = [
         tattoo > 0 && {
-          service: "tattoo" as "tattoo" | "nail",
+          service: "tattoo" as "tattoo" | "nail" | "caricature",
           count: tattoo,
           price: 30,
         },
         nail > 0 && {
-          service: "nail" as "tattoo" | "nail",
+          service: "nail" as "tattoo" | "nail" | "caricature",
           count: nail,
           price: 30,
+        },
+        caricature > 0 && {
+          service: "caricature" as "tattoo" | "nail" | "caricature",
+          count: caricature,
+          price: isCaricatureCouple ? 100 : 80,
         },
       ].filter((record) => record !== false);
 
       await createServiceRecord({
         name,
         services,
-        total: tattoo * 30 + nail * 30,
+        total: getTotalPrice(),
+        mode: paymentMode,
       });
 
       setPaymentState("completed");
@@ -158,6 +178,28 @@ const Service = () => {
             </div>
           </div>
           <div className="space-y-2">
+            <Label>Caricature</Label>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center space-x-2">
+                <Button
+                  disabled={caricature === 0}
+                  onClick={() => setCaricature(caricature - 1)}
+                >
+                  -
+                </Button>
+                <p>{caricature}</p>
+                <Button onClick={() => setCaricature(caricature + 1)}>+</Button>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Label>Couple</Label>
+                <Switch
+                  checked={isCaricatureCouple}
+                  onCheckedChange={setIsCaricatureCouple}
+                />
+              </div>
+            </div>
+          </div>
+          <div className="space-y-2">
             <Label>Nail Art</Label>
             <Select
               value={String(nail)}
@@ -179,6 +221,23 @@ const Service = () => {
         </form>
         {isFormValid && (
           <div className="space-y-2">
+            <div className="space-y-2">
+              <Label>Payment Mode</Label>
+              <div className="flex justify-between gap-x-2 *:w-1/2 *:text-lg *:cursor-pointer">
+                <Button
+                  variant={paymentMode === "CASH" ? "default" : "secondary"}
+                  onClick={() => setPaymentMode("CASH")}
+                >
+                  Cash
+                </Button>
+                <Button
+                  variant={paymentMode === "UPI" ? "default" : "secondary"}
+                  onClick={() => setPaymentMode("UPI")}
+                >
+                  UPI
+                </Button>
+              </div>
+            </div>
             <p className="text-center">Invoice</p>
             <div className="md:max-w-3/5 mx-auto border-2 rounded p-2 space-y-4">
               <p className="text-lg">Client: {name}</p>
@@ -200,6 +259,16 @@ const Service = () => {
                       <TableCell>₹{tattoo * 30}</TableCell>
                     </TableRow>
                   )}
+                  {caricature > 0 && (
+                    <TableRow>
+                      <TableCell>Caricature</TableCell>
+                      <TableCell>{caricature}</TableCell>
+                      <TableCell>₹{isCaricatureCouple ? 100 : 80}</TableCell>
+                      <TableCell>
+                        ₹{caricature * (isCaricatureCouple ? 100 : 80)}
+                      </TableCell>
+                    </TableRow>
+                  )}
                   {nail > 0 && (
                     <TableRow>
                       <TableCell>Nail Art</TableCell>
@@ -212,8 +281,8 @@ const Service = () => {
               </Table>
               <div className="pt-2 border-t-2 border-dashed">
                 <div className="text-2xl flex justify-between">
-                  <p>Total</p>
-                  <p className="font-bold">₹{tattoo * 30 + nail * 30}</p>
+                  <p>Total ({paymentMode})</p>
+                  <p className="font-bold">₹{getTotalPrice()}</p>
                 </div>
               </div>
             </div>
@@ -237,13 +306,21 @@ const Service = () => {
                   {paymentState === "pending" ? (
                     <>
                       <div className="flex flex-col gap-y-2 h-full justify-center items-center">
-                        <p className="text-lg font-extrabold">
-                          Scan to pay ₹{tattoo * 30 + nail * 30} via UPI
-                        </p>
-                        <QRCode
-                          value={`upi://pay?pa=${getSettingValue(settings, "upi")}&am=${tattoo * 30 + nail * 30}&cu=INR&tn=Celluloid`}
-                          className="bg-white p-1 mb-4"
-                        />
+                        {paymentMode === "CASH" ? (
+                          <p className="border-2 rounded-md aspect-square max-w-2/3 text-4xl md:text-5xl font-extrabold flex items-center justify-center text-center p-2">
+                            Please pay ₹{getTotalPrice()} in Cash
+                          </p>
+                        ) : (
+                          <>
+                            <p className="text-lg font-extrabold">
+                              Scan to pay ₹{getTotalPrice()} via UPI
+                            </p>
+                            <QRCode
+                              value={`upi://pay?pa=${getSettingValue(settings, "upi")}&am=${getTotalPrice()}&cu=INR&tn=Celluloid`}
+                              className="bg-white p-1 mb-4"
+                            />
+                          </>
+                        )}
                       </div>
                       <div className="flex gap-x-2 *:w-1/2 *:cursor-pointer">
                         <Button
@@ -279,6 +356,7 @@ const Service = () => {
                           setName("");
                           setTattoo(0);
                           setNail(0);
+                          setCaricature(0);
                           setNameError(null);
                           setServicesError(null);
                           setPaymentState("pending");

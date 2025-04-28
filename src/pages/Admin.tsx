@@ -48,9 +48,15 @@ type OperationStatus = "IDLE" | "PROCESSING" | "SUCCESS" | "ERROR";
 const Admin = () => {
   const [currentScreen, setCurrentScreen] = useState(0);
   const events = useQuery(api.functions.getEvents);
+  const services = useQuery(api.functions.getServiceRecords);
 
   const screens = [
-    { title: "Dashboard", component: <Dashboard /> },
+    {
+      title: "Dashboard",
+      component: (
+        <Dashboard events={events || []} serviceRecords={services || []} />
+      ),
+    },
     { title: "New Event", component: <NewEvent /> },
     { title: "All Events", component: <AllEvents events={events || []} /> },
   ];
@@ -91,10 +97,15 @@ interface ChartConfigItem {
 
 type ChartConfig = Record<string, ChartConfigItem>;
 
-const Dashboard = () => {
-  const updateSetting = useMutation(api.functions.updateSettings);
-  const events = useQuery(api.functions.getEvents);
+const Dashboard = ({
+  events,
+  serviceRecords,
+}: {
+  events: Doc<"event">[];
+  serviceRecords: Doc<"serviceRecord">[];
+}) => {
   const totalMoney = useQuery(api.functions.totalMoneyCollected);
+  const updateSetting = useMutation(api.functions.updateSettings);
   const settings = useQuery(api.functions.getSettings);
   const deleteRegistration = useMutation(api.functions.deleteRegistration);
   const registrations = useQuery(api.functions.getAllRegistrations);
@@ -146,6 +157,17 @@ const Dashboard = () => {
       <div className="border-2 rounded p-5 space-y-2">
         <p className="text-lg font-bold">Total money collected from events</p>
         <p className="text-3xl">₹{totalMoney}</p>
+      </div>
+
+      <div className="border-2 rounded p-5 space-y-2">
+        <p className="text-lg font-bold">Total money collected from services</p>
+        <p className="text-3xl">
+          ₹
+          {serviceRecords.reduce(
+            (acc, serviceRecord) => acc + serviceRecord.total,
+            0,
+          )}
+        </p>
       </div>
 
       {registrations && registrations.length > 0 ? (

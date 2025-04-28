@@ -162,12 +162,24 @@ export const createServiceRecord = mutation({
     name: v.string(),
     services: v.array(
       v.object({
-        service: v.union(v.literal("tattoo"), v.literal("nail")),
+        service: v.union(
+          v.literal("tattoo"),
+          v.literal("nail"),
+          v.literal("caricature"),
+        ),
         count: v.number(),
         price: v.number(),
       }),
     ),
+    mode: v.union(v.literal("CASH"), v.literal("UPI")),
     total: v.number(),
   },
   handler: async (ctx, args) => await ctx.db.insert("serviceRecord", args),
+});
+
+export const getServiceRecords = query({
+  async handler(ctx) {
+    const serviceRecords = await ctx.db.query("serviceRecord").collect();
+    return serviceRecords.sort((a, b) => b._creationTime - a._creationTime);
+  },
 });
