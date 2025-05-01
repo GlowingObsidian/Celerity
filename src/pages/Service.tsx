@@ -32,7 +32,6 @@ import { z } from "zod";
 import { getSettingValue } from "@/lib/utils";
 import { CheckIcon, Loader } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
-import { get } from "http";
 
 const nameSchema = z.string().min(1, "Name is required");
 const serviceSchema = z
@@ -63,7 +62,6 @@ const Service = () => {
 
   const [nameError, setNameError] = useState<string | null>(null);
   const [servicesError, setServicesError] = useState<string | null>(null);
-  const [caricatureError, setCaricatureError] = useState<string | null>(null);
 
   const [paymentState, setPaymentState] = useState<"pending" | "completed">(
     "pending",
