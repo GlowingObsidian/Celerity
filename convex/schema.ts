@@ -47,7 +47,7 @@ export default defineSchema({
         price: v.number(),
       }),
     ),
-    mode: v.union(v.literal("CASH"), v.literal("UPI")),
+    mode: v.optional(v.union(v.literal("CASH"), v.literal("UPI"))),
     total: v.number(),
   }),
 });
