@@ -46,6 +46,7 @@ const Event = () => {
                   <TableHead>E-Mail</TableHead>
                   <TableHead>Phone</TableHead>
                   <TableHead>College</TableHead>
+                  <TableHead>Mode</TableHead>
                   <TableHead>Time</TableHead>
                 </TableRow>
               </TableHeader>
@@ -60,6 +61,7 @@ const Event = () => {
                       <TableCell>{registration.email}</TableCell>
                       <TableCell>{registration.phone}</TableCell>
                       <TableCell>{registration.college}</TableCell>
+                      <TableCell>{registration.mode}</TableCell>
                       <TableCell>
                         {new Date(registration._creationTime)
                           .toLocaleTimeString()
